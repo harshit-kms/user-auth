@@ -5,9 +5,8 @@ import { makeStyles } from "@material-ui/core/styles";
 import Container from "@material-ui/core/Container";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import axios from 'axios';
-import { useNavigate } from "react-router-dom"; 
+import { Link, useNavigate } from "react-router-dom"; 
 import { useAuth } from "../contexts/AuthContext";
-
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -30,12 +29,11 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Signup = () => {
+const Login = () => {
   const classes = useStyles();
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { isAuthenticated } = useAuth();
+  const { login, isAuthenticated } = useAuth();
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -45,24 +43,34 @@ const Signup = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const postSignup = async(event) => {
+  const postLogin = async(event) => {
     event.preventDefault();
     try{
-        const res = await axios.post(`${process.env.REACT_APP_BACKEND_HOST}/user/signup`, {
-            name:name,
+        const res = await axios.post(`${process.env.REACT_APP_BACKEND_HOST}/user/login`, {
             email:email,
             password:password,
-        });
-        setName("");
+        },
+        {
+            withCredentials: true, 
+        }
+    );
+    login(res.data.token);
         setEmail("");
         setPassword("");
-        alert("Sign-up successful");
-        navigate("/login");
+        alert("Log-in successful");
+        if(res) navigate("/home");
         
     }
     catch(err){
-        console.error("Error signing up: ", err);
-        alert("Error signing up. Please try again.");
+      if(err.response && err.response.status === 401){
+        alert("Incorrect credentials")
+      }
+      else{
+        alert("Error loggin-in. Please try again.");
+      }
+      setEmail("");
+      setPassword("");
+
     }
   };
 
@@ -74,23 +82,10 @@ const Signup = () => {
           <LockOutlinedIcon />
         </Avatar>
         <Typography component="h1" variant="h5">
-          Sign in
+          Log in
         </Typography>
-        <form className={classes.form} onSubmit={postSignup}>
-          <TextField
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            id="name"
-            label="Full Name"
-            name="name"
-            autoFocus
-            value={name}
-            onChange={(event) => {
-                setName(event.target.value);
-              }}
-          />
+        <form className={classes.form} onSubmit={postLogin}>
+
           <TextField
             variant="outlined"
             margin="normal"
@@ -100,6 +95,7 @@ const Signup = () => {
             label="Email"
             name="email"
             type="email"
+            autoFocus
             value={email}
             onChange={(event) => {
                 setEmail(event.target.value);
@@ -126,12 +122,14 @@ const Signup = () => {
             color="primary"
             className={classes.submit}
           >
-            Sign In
+            Log in
           </Button>
+          <p>Don't have an account? <Link to="/signup" style={{ color: "purple", textDecoration: "none" }}>Sign-in</Link>
+          </p>
         </form>
       </Paper>
     </Container>
   );
 };
 
-export default Signup;
+export default Login;

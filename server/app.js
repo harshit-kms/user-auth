@@ -1,31 +1,39 @@
 import express from 'express';
 import cors from 'cors';
 import connectToMongoDB from './database/connect.js';
-import staticRoute from './routes/staticRouter.js';
 import userRoute from './routes/user.js'; 
+import appRoute from './routes/appRoute.js';
+import cookieParser from 'cookie-parser';
+import { restrictToLoggedInUserOnly } from './middlewares/auth.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 app.use(express.json());
-const PORT = 7000;
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
 app.use(cors({
-    origin: 'http://localhost:3000', 
+    origin: process.env.REACT_APP_FRONTEND_HOST, 
     methods: ['GET', 'POST', 'PUT', 'DELETE'], 
     credentials: true, 
-  }));
+}));
 
-connectToMongoDB("mongodb://localhost:27017/infloso")
+// Protected routes
+app.use('/home', restrictToLoggedInUserOnly, appRoute);
+
+// User routes
+app.use('/user', userRoute);
+
+const PORT = process.env.PORT;
+
+connectToMongoDB(process.env.DATABASE_URL)
 .then(() => {
     app.listen(PORT, () => {
-        console.log("server started on ", PORT);
+        console.log("Server started on ", PORT);
     });
 })
 .catch((err) => {
-    console.error("Failed to connect to MongoDB: ", err)
+    console.error("Failed to connect to MongoDB: ", err);
 });
-
-
-app.use('/user', userRoute);
-app.use('/', staticRoute); 
-
-
-
