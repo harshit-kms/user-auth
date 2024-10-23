@@ -45,6 +45,7 @@ const Signup = () => {
     }
   }, [isAuthenticated, navigate]);
 
+  //post request to create users
   const postSignup = async(event) => {
     event.preventDefault();
     try{

@@ -42,7 +42,7 @@ const Login = () => {
       navigate("/home");
     }
   }, [isAuthenticated, navigate]);
-
+//post request to check the user
   const postLogin = async(event) => {
     event.preventDefault();
     try{
